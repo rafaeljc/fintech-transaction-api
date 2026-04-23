@@ -39,3 +39,5 @@ jobs:
 
       - name: Verify
         run: ./mvnw verify --no-transfer-progress
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}

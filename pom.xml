@@ -245,6 +245,7 @@
 				</executions>
 				<configuration>
 					<failBuildOnCVSS>${owasp.failOnCVSS}</failBuildOnCVSS>
+					<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
 				</configuration>
 			</plugin>
 		</plugins>
