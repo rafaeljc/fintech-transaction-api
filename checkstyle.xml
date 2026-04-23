@@ -11,10 +11,6 @@
     <property name="fileExtensions" value="java"/>
 
     <module name="SuppressWarningsFilter"/>
-    <module name="SuppressionFilter">
-        <property name="file" value="${config_loc}/suppressions.xml"/>
-        <property name="optional" value="true"/>
-    </module>
 
     <!-- File-level: no tabs, max 100 chars per line, newline at EOF -->
     <module name="FileTabCharacter">
