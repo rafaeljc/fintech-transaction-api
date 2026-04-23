@@ -23,14 +23,19 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Cache OWASP NVD database
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp
+          key: owasp-nvd-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            owasp-nvd-${{ runner.os }}-
+
       - name: Make Maven wrapper executable
         run: chmod +x mvnw
 
       - name: Compile
         run: ./mvnw compile --no-transfer-progress
 
-      # OWASP Dependency-Check is skipped until a reliable approach for the NVD
-      # database update is found. Without an API key, rate limiting causes 30-40 min
-      # runs. The NVD API key approach was attempted but did not resolve the issue.
       - name: Verify
-        run: ./mvnw verify --no-transfer-progress -Dowasp.skip=true
+        run: ./mvnw verify --no-transfer-progress -DnvdApiKey=${{ secrets.NVD_API_KEY }}
