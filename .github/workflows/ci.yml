@@ -23,14 +23,6 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Cache OWASP NVD database
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository/org/owasp
-          key: owasp-nvd-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            owasp-nvd-${{ runner.os }}-
-
       - name: Make Maven wrapper executable
         run: chmod +x mvnw
 
@@ -38,4 +30,4 @@ jobs:
         run: ./mvnw compile --no-transfer-progress
 
       - name: Verify
-        run: ./mvnw verify --no-transfer-progress -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+        run: ./mvnw verify --no-transfer-progress
