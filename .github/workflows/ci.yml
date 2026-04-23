@@ -38,6 +38,4 @@ jobs:
         run: ./mvnw compile --no-transfer-progress
 
       - name: Verify
-        run: ./mvnw verify --no-transfer-progress
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./mvnw verify --no-transfer-progress -DnvdApiKey=${{ secrets.NVD_API_KEY }}
