@@ -22,7 +22,7 @@ class TransactionRequestTest {
     }
 
     @Test
-    void validation_validRequest_noViolations() {
+    void validationValidRequestNoViolations() {
         var request = new TransactionRequest(
                 new BigDecimal("10.00"),
                 OffsetDateTime.parse("2024-06-01T10:00:00+00:00"));
@@ -31,7 +31,7 @@ class TransactionRequestTest {
     }
 
     @Test
-    void validation_zeroAmount_noViolations() {
+    void validationZeroAmountNoViolations() {
         var request = new TransactionRequest(
                 BigDecimal.ZERO,
                 OffsetDateTime.parse("2024-06-01T10:00:00+00:00"));
@@ -40,15 +40,16 @@ class TransactionRequestTest {
     }
 
     @Test
-    void validation_presentDateTime_noViolations() {
+    void validationPresentDateTimeNoViolations() {
         var request = new TransactionRequest(new BigDecimal("10.00"), OffsetDateTime.now());
 
         assertThat(validator.validate(request)).isEmpty();
     }
 
     @Test
-    void validation_nullAmount_violatesAmount() {
-        var request = new TransactionRequest(null, OffsetDateTime.parse("2024-06-01T10:00:00+00:00"));
+    void validationNullAmountViolatesAmount() {
+        var request = new TransactionRequest(
+                null, OffsetDateTime.parse("2024-06-01T10:00:00+00:00"));
 
         Set<ConstraintViolation<TransactionRequest>> violations = validator.validate(request);
 
@@ -58,7 +59,7 @@ class TransactionRequestTest {
     }
 
     @Test
-    void validation_negativeAmount_violatesAmount() {
+    void validationNegativeAmountViolatesAmount() {
         var request = new TransactionRequest(
                 new BigDecimal("-0.01"),
                 OffsetDateTime.parse("2024-06-01T10:00:00+00:00"));
@@ -71,7 +72,7 @@ class TransactionRequestTest {
     }
 
     @Test
-    void validation_nullDateTime_violatesDateTime() {
+    void validationNullDateTimeViolatesDateTime() {
         var request = new TransactionRequest(new BigDecimal("10.00"), null);
 
         Set<ConstraintViolation<TransactionRequest>> violations = validator.validate(request);
@@ -82,7 +83,7 @@ class TransactionRequestTest {
     }
 
     @Test
-    void validation_futureDateTime_violatesDateTime() {
+    void validationFutureDateTimeViolatesDateTime() {
         var request = new TransactionRequest(
                 new BigDecimal("10.00"),
                 OffsetDateTime.now().plusSeconds(1));

@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TransactionTest {
 
     @Test
-    void accessors_returnConstructedValues() {
+    void accessorsReturnConstructedValues() {
         BigDecimal amount = new BigDecimal("99.50");
         OffsetDateTime dateTime = OffsetDateTime.parse("2024-06-01T10:00:00+00:00");
 
@@ -21,7 +21,7 @@ class TransactionTest {
     }
 
     @Test
-    void equality_basedOnAmountAndDateTime() {
+    void equalityBasedOnAmountAndDateTime() {
         BigDecimal amount = new BigDecimal("10.00");
         OffsetDateTime dateTime = OffsetDateTime.parse("2024-01-15T12:00:00+00:00");
 

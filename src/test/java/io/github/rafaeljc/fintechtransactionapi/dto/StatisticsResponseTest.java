@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class StatisticsResponseTest {
 
     @Test
-    void accessors_returnConstructedValues() {
+    void accessorsReturnConstructedValues() {
         var response = new StatisticsResponse(5L, new BigDecimal("50.00"),
                 new BigDecimal("10.00"), new BigDecimal("2.00"), new BigDecimal("20.00"));
 
@@ -21,7 +21,7 @@ class StatisticsResponseTest {
     }
 
     @Test
-    void empty_returnsAllZeros() {
+    void emptyReturnsAllZeros() {
         StatisticsResponse response = StatisticsResponse.empty();
 
         assertThat(response.count()).isEqualTo(0L);

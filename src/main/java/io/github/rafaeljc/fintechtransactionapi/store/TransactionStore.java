@@ -17,8 +17,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class TransactionStore {
 
     // every method that reads/writes instance data must acquire this lock;
-    // reentrant to prevent deadlock when a locked method calls another method that also requires the lock;
-    // read lock can only be used if no other locked method is called — acquiring a write lock while holding a read lock deadlocks;
+    // reentrant to prevent deadlock when a locked method calls another that also requires the lock;
+    // read lock can only be used if no other locked method is called —
+    //   acquiring a write lock while holding a read lock deadlocks;
     // fair mode (true) prevents writer starvation
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     private volatile TreeMap<OffsetDateTime, List<BigDecimal>> window = new TreeMap<>();
@@ -66,7 +67,8 @@ public class TransactionStore {
         }
     }
 
-    // must be called at the start of any public method that reads/writes instance data for lazy eviction
+    // must be called at the start of any public method that reads/writes instance data
+    // for lazy eviction
     private void evict() {
         lock.writeLock().lock();
         try {

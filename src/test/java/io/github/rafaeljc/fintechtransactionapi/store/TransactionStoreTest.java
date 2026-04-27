@@ -25,7 +25,7 @@ class TransactionStoreTest {
     }
 
     @Test
-    void statistics_emptyStore_returnsAllZeros() {
+    void statisticsEmptyStoreReturnsAllZeros() {
         StatisticsResponse stats = store.statistics();
 
         assertThat(stats.count()).isEqualTo(0L);
@@ -36,7 +36,7 @@ class TransactionStoreTest {
     }
 
     @Test
-    void statistics_transactionsWithinWindow_returnsCorrectAggregates() {
+    void statisticsTransactionsWithinWindowReturnsCorrectAggregates() {
         OffsetDateTime now = OffsetDateTime.now();
         store.add(new Transaction(new BigDecimal("10.00"), now));
         store.add(new Transaction(new BigDecimal("20.00"), now));
@@ -52,7 +52,7 @@ class TransactionStoreTest {
     }
 
     @Test
-    void statistics_expiredTransactions_excludedFromAggregates() {
+    void statisticsExpiredTransactionsExcludedFromAggregates() {
         OffsetDateTime expired = OffsetDateTime.now().minusSeconds(61);
         store.add(new Transaction(new BigDecimal("100.00"), expired));
         store.add(new Transaction(new BigDecimal("5.00"), OffsetDateTime.now()));
@@ -67,7 +67,7 @@ class TransactionStoreTest {
     }
 
     @Test
-    void statistics_afterClear_returnsAllZeros() {
+    void statisticsAfterClearReturnsAllZeros() {
         store.add(new Transaction(new BigDecimal("50.00"), OffsetDateTime.now()));
         store.clear();
 
@@ -81,7 +81,7 @@ class TransactionStoreTest {
     }
 
     @Test
-    void add_sameAmount_frequencyTrackedCorrectly() {
+    void addSameAmountFrequencyTrackedCorrectly() {
         OffsetDateTime now = OffsetDateTime.now();
         store.add(new Transaction(new BigDecimal("10.00"), now));
         store.add(new Transaction(new BigDecimal("10.00"), now));
@@ -96,7 +96,7 @@ class TransactionStoreTest {
     }
 
     @Test
-    void concurrentOperations_doNotCorruptState() throws InterruptedException {
+    void concurrentOperationsDoNotCorruptState() throws InterruptedException {
         int adderThreads = 5;
         int readerThreads = 5;
         int totalThreads = adderThreads + readerThreads + 1;
