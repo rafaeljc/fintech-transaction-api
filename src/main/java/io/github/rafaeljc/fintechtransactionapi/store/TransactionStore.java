@@ -16,6 +16,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Component
 public class TransactionStore {
 
+    // every method that reads/writes instance data must acquire this lock;
+    // reentrant to prevent deadlock when a locked method calls another method that also requires the lock;
+    // read lock can only be used if no other locked method is called — acquiring a write lock while holding a read lock deadlocks;
+    // fair mode (true) prevents writer starvation
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     private volatile TreeMap<OffsetDateTime, List<BigDecimal>> window = new TreeMap<>();
     private volatile TreeMap<BigDecimal, Integer> amounts = new TreeMap<>();
@@ -52,6 +56,7 @@ public class TransactionStore {
     public void clear() {
         lock.writeLock().lock();
         try {
+            // assigning a new instance is O(1); .clear() is O(n) — let GC reclaim the old data
             window = new TreeMap<>();
             amounts = new TreeMap<>();
             count = 0;
@@ -61,6 +66,7 @@ public class TransactionStore {
         }
     }
 
+    // must be called at the start of any public method that reads/writes instance data for lazy eviction
     private void evict() {
         lock.writeLock().lock();
         try {
