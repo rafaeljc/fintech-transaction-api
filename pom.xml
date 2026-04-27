@@ -33,8 +33,7 @@
 		<maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
 		<checkstyle.version>10.20.0</checkstyle.version>
 		<spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
-		<!-- Gates (raise coverage.minimum to 0.80 once tests are in place) -->
-		<coverage.minimum>0.00</coverage.minimum>
+		<coverage.minimum>0.80</coverage.minimum>
 	</properties>
 	<dependencies>
 		<dependency>
