@@ -96,6 +96,24 @@ class TransactionStoreTest {
     }
 
     @Test
+    void evictionRemovesAmountKeyWhenFrequencyReachesZero() throws InterruptedException {
+        store.add(new Transaction(new BigDecimal("99.00"), OffsetDateTime.now().minusSeconds(55)));
+        store.add(new Transaction(new BigDecimal("5.00"), OffsetDateTime.now()));
+
+        StatisticsResponse before = store.statistics();
+        assertThat(before.count()).isEqualTo(2L);
+        assertThat(before.min()).isEqualByComparingTo(new BigDecimal("5.00"));
+        assertThat(before.max()).isEqualByComparingTo(new BigDecimal("99.00"));
+
+        Thread.sleep(6_000);
+
+        StatisticsResponse after = store.statistics();
+        assertThat(after.count()).isEqualTo(1L);
+        assertThat(after.min()).isEqualByComparingTo(new BigDecimal("5.00"));
+        assertThat(after.max()).isEqualByComparingTo(new BigDecimal("5.00"));
+    }
+
+    @Test
     void concurrentOperationsDoNotCorruptState() throws InterruptedException {
         int adderThreads = 5;
         int readerThreads = 5;

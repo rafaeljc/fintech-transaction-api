@@ -39,6 +39,16 @@ class TransactionServiceTest {
     }
 
     @Test
+    void addWithZeroAmountDelegatesToStore() {
+        OffsetDateTime dateTime = OffsetDateTime.now();
+        var request = new TransactionRequest(BigDecimal.ZERO, dateTime);
+
+        service.add(request);
+
+        verify(store).add(new Transaction(BigDecimal.ZERO, dateTime));
+    }
+
+    @Test
     void clearDelegatesToStore() {
         service.clear();
 
