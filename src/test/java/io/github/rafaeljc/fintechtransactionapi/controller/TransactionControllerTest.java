@@ -1,86 +1,139 @@
 package io.github.rafaeljc.fintechtransactionapi.controller;
 
-import io.github.rafaeljc.fintechtransactionapi.dto.TransactionRequest;
-import io.github.rafaeljc.fintechtransactionapi.exception.GlobalExceptionHandler;
-import io.github.rafaeljc.fintechtransactionapi.service.TransactionService;
+import io.github.rafaeljc.fintechtransactionapi.dto.StatisticsResponse;
+import io.github.rafaeljc.fintechtransactionapi.store.TransactionStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.ResponseEntity;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 class TransactionControllerTest {
 
-    @Mock
-    private TransactionService transactionService;
+    @Autowired
+    private TestRestTemplate restTemplate;
 
-    private MockMvc mockMvc;
+    @Autowired
+    private TransactionStore store;
 
     @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders
-            .standaloneSetup(new TransactionController(transactionService))
-            .setControllerAdvice(new GlobalExceptionHandler())
-            .build();
+    void clearStore() {
+        store.clear();
+    }
+
+    private HttpEntity<String> jsonBody(String body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(body, headers);
     }
 
     @Test
-    void postWithValidBodyReturns201() throws Exception {
-        mockMvc.perform(post("/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"amount\":\"42.00\",\"dateTime\":\"2024-01-15T10:00:00Z\"}"))
-            .andExpect(status().isCreated())
-            .andExpect(content().string(""));
+    void postWithValidBodyReturns201() {
+        ResponseEntity<Void> response = restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{\"amount\":\"42.00\",\"dateTime\":\"2024-01-15T10:00:00Z\"}"),
+            Void.class);
 
-        verify(transactionService).add(any(TransactionRequest.class));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     @Test
-    void postWithNullAmountReturns422() throws Exception {
-        mockMvc.perform(post("/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"amount\":null,\"dateTime\":\"2024-01-15T10:00:00Z\"}"))
-            .andExpect(status().isUnprocessableEntity());
+    void postWithNullAmountReturns422() {
+        ResponseEntity<Void> response = restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{\"amount\":null,\"dateTime\":\"2024-01-15T10:00:00Z\"}"),
+            Void.class);
 
-        verify(transactionService, never()).add(any());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Test
-    void postWithNullDateTimeReturns422() throws Exception {
-        mockMvc.perform(post("/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"amount\":\"42.00\",\"dateTime\":null}"))
-            .andExpect(status().isUnprocessableEntity());
+    void postWithNullDateTimeReturns422() {
+        ResponseEntity<Void> response = restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{\"amount\":\"42.00\",\"dateTime\":null}"),
+            Void.class);
 
-        verify(transactionService, never()).add(any());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Test
-    void postWithMalformedJsonReturns400() throws Exception {
-        mockMvc.perform(post("/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{invalid}"))
-            .andExpect(status().isBadRequest());
+    void postWithFutureDateTimeReturns422() {
+        ResponseEntity<Void> response = restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{\"amount\":\"42.00\",\"dateTime\":\"2099-01-15T10:00:00Z\"}"),
+            Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Test
-    void deleteReturns200() throws Exception {
-        mockMvc.perform(delete("/transactions"))
-            .andExpect(status().isOk())
-            .andExpect(content().string(""));
+    void postWithNegativeAmountReturns422() {
+        ResponseEntity<Void> response = restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{\"amount\":\"-1.00\",\"dateTime\":\"2024-01-15T10:00:00Z\"}"),
+            Void.class);
 
-        verify(transactionService).clear();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
+    }
+
+    @Test
+    void postWithZeroAmountReturns201() {
+        ResponseEntity<Void> response = restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{\"amount\":\"0.00\",\"dateTime\":\"2024-01-15T10:00:00Z\"}"),
+            Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void postWithMalformedJsonReturns400() {
+        ResponseEntity<Void> response = restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{invalid}"),
+            Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void deleteReturns200() {
+        ResponseEntity<Void> response = restTemplate.exchange(
+            "/transactions", HttpMethod.DELETE, null, Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void afterDeleteGetStatisticsReturnsAllZeros() {
+        assertThat(restTemplate.postForEntity(
+            "/transactions",
+            jsonBody("{\"amount\":\"42.00\",\"dateTime\":\"2024-01-15T10:00:00Z\"}"),
+            Void.class).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        restTemplate.exchange("/transactions", HttpMethod.DELETE, null, Void.class);
+
+        ResponseEntity<StatisticsResponse> response = restTemplate.getForEntity(
+            "/statistics", StatisticsResponse.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        StatisticsResponse body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.count()).isZero();
+        assertThat(body.sum()).isEqualByComparingTo("0");
+        assertThat(body.avg()).isEqualByComparingTo("0");
+        assertThat(body.min()).isEqualByComparingTo("0");
+        assertThat(body.max()).isEqualByComparingTo("0");
     }
 }
