@@ -2,6 +2,8 @@ package io.github.rafaeljc.fintechtransactionapi.store;
 
 import io.github.rafaeljc.fintechtransactionapi.dto.StatisticsResponse;
 import io.github.rafaeljc.fintechtransactionapi.model.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -15,6 +17,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Component
 public class TransactionStore {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionStore.class);
 
     // every method that reads/writes instance data must acquire this lock;
     // reentrant to prevent deadlock when a locked method calls another that also requires the lock;
@@ -35,6 +39,7 @@ public class TransactionStore {
             count++;
             sum = sum.add(t.amount());
             amounts.merge(t.amount(), 1, Integer::sum);
+            LOG.debug("Transaction added: amount={}, windowSize={}", t.amount(), count);
         } finally {
             lock.writeLock().unlock();
         }
@@ -57,11 +62,13 @@ public class TransactionStore {
     public void clear() {
         lock.writeLock().lock();
         try {
+            long removed = count;
             // assigning a new instance is O(1); .clear() is O(n) — let GC reclaim the old data
             window = new TreeMap<>();
             amounts = new TreeMap<>();
             count = 0;
             sum = BigDecimal.ZERO;
+            LOG.debug("Transaction store cleared: removedCount={}", removed);
         } finally {
             lock.writeLock().unlock();
         }
@@ -74,6 +81,7 @@ public class TransactionStore {
         try {
             OffsetDateTime cutoff = OffsetDateTime.now().minusSeconds(60);
             Map<OffsetDateTime, List<BigDecimal>> expired = window.headMap(cutoff);
+            long before = count;
             for (Map.Entry<OffsetDateTime, List<BigDecimal>> entry : expired.entrySet()) {
                 for (BigDecimal amount : entry.getValue()) {
                     count--;
@@ -82,6 +90,9 @@ public class TransactionStore {
                 }
             }
             expired.clear();
+            if (count < before) {
+                LOG.debug("Evicted expired transactions: evictedCount={}", before - count);
+            }
         } finally {
             lock.writeLock().unlock();
         }
