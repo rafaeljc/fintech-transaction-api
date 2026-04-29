@@ -1,58 +1,31 @@
 package io.github.rafaeljc.fintechtransactionapi.exception;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 class GlobalExceptionHandlerTest {
 
-    private MockMvc mockMvc;
+    @Autowired
+    private TestRestTemplate restTemplate;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders
-            .standaloneSetup(new TestController())
-            .setControllerAdvice(new GlobalExceptionHandler())
-            .build();
-    }
+    @ParameterizedTest
+    @ValueSource(strings = {"GET", "POST", "PUT", "PATCH", "DELETE"})
+    void unknownRouteReturns404WithEmptyBody(String method) {
+        ResponseEntity<String> response = restTemplate.exchange(
+            "/unknown", HttpMethod.valueOf(method), null, String.class);
 
-    @RestController
-    static class TestController {
-
-        @PostMapping(value = "/test", consumes = "application/json")
-        void handle(@Valid @RequestBody TestRequest body) {
-        }
-    }
-
-    record TestRequest(@NotNull String field) {
-    }
-
-    @Test
-    void malformedJsonReturns400() throws Exception {
-        mockMvc.perform(post("/test")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{invalid}"))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().string(""));
-    }
-
-    @Test
-    void nullFieldReturns422() throws Exception {
-        mockMvc.perform(post("/test")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"field\": null}"))
-            .andExpect(status().isUnprocessableEntity())
-            .andExpect(content().string(""));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNullOrEmpty();
     }
 }

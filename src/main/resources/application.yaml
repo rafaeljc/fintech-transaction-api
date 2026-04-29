@@ -5,6 +5,11 @@ server:
 spring:
   application:
     name: fintech-transaction-api
+  web:
+    error:
+      include-message: never
+      include-stacktrace: never
+      include-exception: false
 
 logging:
   level:
