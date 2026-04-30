@@ -32,4 +32,10 @@ public class GlobalExceptionHandler {
     public void handleNotValid(MethodArgumentNotValidException ex) {
         LOG.debug("Validation failed: {}", ex.getMessage());
     }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public void handleUnexpected(Exception ex) {
+        LOG.error("Unexpected error", ex);
+    }
 }
