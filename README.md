@@ -16,7 +16,7 @@ All endpoints are prefixed with `/api/v1`.
 |----------|-----------------|--------------------------------------------------|
 | `POST`   | `/transactions` | Submit a transaction                             |
 | `DELETE` | `/transactions` | Delete all transactions                          |
-| `GET`    | `/statistics`   | Get statistics for the last 60 seconds           |
+| `GET`    | `/statistics`   | Get statistics for the configured lookback duration |
 
 ### POST /transactions
 
@@ -100,11 +100,48 @@ curl -i -X DELETE http://localhost:8080/api/v1/transactions
 ./mvnw test
 ```
 
+## Configuration
+
+| Env var | Default | Description |
+|---|---|---|
+| `STATISTICS_LOOKBACK_DURATION` | `60s` | How far back from now transactions are included in statistics. Must be greater than zero. Accepts `30s`, `2m`, `1h`, etc. |
+
+**Local dev** — copy `.env.example` to `.env` and adjust values:
+
+```bash
+cp .env.example .env
+```
+
+```dotenv
+STATISTICS_LOOKBACK_DURATION=30s
+```
+
+**Docker Compose:**
+
+```yaml
+services:
+  api:
+    image: fintech-transaction-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+```
+
+**Kubernetes:**
+
+```yaml
+env:
+  - name: STATISTICS_LOOKBACK_DURATION
+    value: "30s"
+```
+
 ## Project Structure
 
 ```
 src/
 ├── main/java/io/github/rafaeljc/fintechtransactionapi/
+│   ├── config/         # Configuration properties
 │   ├── controller/     # REST endpoints
 │   ├── service/        # Business logic
 │   ├── store/          # Thread-safe in-memory data store
