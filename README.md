@@ -12,10 +12,10 @@ A REST API that accepts financial transactions and returns real-time statistics 
 
 All endpoints are prefixed with `/api/v1`.
 
-| Method   | Endpoint        | Description                                      |
-|----------|-----------------|--------------------------------------------------|
-| `POST`   | `/transactions` | Submit a transaction                             |
-| `DELETE` | `/transactions` | Delete all transactions                          |
+| Method   | Endpoint        | Description                                         |
+|----------|-----------------|-----------------------------------------------------|
+| `POST`   | `/transactions` | Submit a transaction                                |
+| `DELETE` | `/transactions` | Delete all transactions                             |
 | `GET`    | `/statistics`   | Get statistics for the configured lookback duration |
 
 ### POST /transactions
@@ -108,21 +108,46 @@ The management server runs on port **8081**, separate from the API.
 curl -s http://localhost:8081/actuator/health | jq
 ```
 
-**Docker Compose:**
+## Docker
+
+### Build
+
+```bash
+docker build -t fintech-transaction-api .
+```
+
+### Run
+
+```bash
+docker run -p 8080:8080 -p 8081:8081 fintech-transaction-api
+```
+
+Override the statistics lookback window:
+
+```bash
+docker run -p 8080:8080 -p 8081:8081 -e STATISTICS_LOOKBACK_DURATION=30s fintech-transaction-api
+```
+
+### Docker Compose
 
 ```yaml
-healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-  interval: 30s
-  timeout: 5s
-  retries: 3
+services:
+  api:
+    image: fintech-transaction-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - STATISTICS_LOOKBACK_DURATION=60s
 ```
+
+> The runtime image (`distroless/java21`) has no shell or HTTP client, so no in-container `HEALTHCHECK` is possible. Probe the application externally via `GET http://localhost:8081/actuator/health`.
 
 ## Configuration
 
-| Env var | Default | Description |
-|---|---|---|
-| `STATISTICS_LOOKBACK_DURATION` | `60s` | How far back from now transactions are included in statistics. Must be greater than zero. Accepts `30s`, `2m`, `1h`, etc. |
+| Env var                        | Default | Description                                                                                                               |
+|--------------------------------|---------|---------------------------------------------------------------------------------------------------------------------------|
+| `STATISTICS_LOOKBACK_DURATION` | `60s`   | How far back from now transactions are included in statistics. Must be greater than zero. Accepts `30s`, `2m`, `1h`, etc. |
 
 **Local dev** — copy `.env.example` to `.env` and adjust values:
 
@@ -142,6 +167,7 @@ services:
     image: fintech-transaction-api
     ports:
       - "8080:8080"
+      - "8081:8081"
     env_file:
       - .env
 ```
