@@ -100,6 +100,24 @@ curl -i -X DELETE http://localhost:8080/api/v1/transactions
 ./mvnw test
 ```
 
+## Health Check
+
+The management server runs on port **8081**, separate from the API.
+
+```bash
+curl -s http://localhost:8081/actuator/health | jq
+```
+
+**Docker Compose:**
+
+```yaml
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+  interval: 30s
+  timeout: 5s
+  retries: 3
+```
+
 ## Configuration
 
 | Env var | Default | Description |
@@ -126,14 +144,6 @@ services:
       - "8080:8080"
     env_file:
       - .env
-```
-
-**Kubernetes:**
-
-```yaml
-env:
-  - name: STATISTICS_LOOKBACK_DURATION
-    value: "30s"
 ```
 
 ## Project Structure
