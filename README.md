@@ -1,5 +1,8 @@
 # Fintech Transaction API
 
+[![CI](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/ci.yml/badge.svg)](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/ci.yml)
+[![CD](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/cd.yml/badge.svg)](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/cd.yml)
+
 A REST API that accepts financial transactions and returns real-time statistics — built with Java 21 and Spring Boot as a hands-on way to learn the stack through a real challenge instead of tutorials.
 
 ## Tech Stack
@@ -126,6 +129,20 @@ Override the statistics lookback window:
 
 ```bash
 docker run -p 8080:8080 -p 8081:8081 -e STATISTICS_LOOKBACK_DURATION=30s fintech-transaction-api
+```
+
+### Pull from GitHub Container Registry
+
+Pre-built images are published to GHCR on every merge to `main` that affects the image:
+
+```bash
+docker pull ghcr.io/rafaeljc/fintech-transaction-api:latest
+```
+
+Pin to a specific commit (find available SHAs on the [GHCR package page](https://github.com/rafaeljc/fintech-transaction-api/pkgs/container/fintech-transaction-api)):
+
+```bash
+docker pull ghcr.io/rafaeljc/fintech-transaction-api:<full-git-sha>
 ```
 
 ### Docker Compose
