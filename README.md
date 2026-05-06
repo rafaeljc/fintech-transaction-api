@@ -1,5 +1,8 @@
 # Fintech Transaction API
 
+[![CI](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/ci.yml/badge.svg)](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/ci.yml)
+[![CD](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/cd.yml/badge.svg)](https://github.com/rafaeljc/fintech-transaction-api/actions/workflows/cd.yml)
+
 A REST API that accepts financial transactions and returns real-time statistics — built with Java 21 and Spring Boot as a hands-on way to learn the stack through a real challenge instead of tutorials.
 
 ## Tech Stack
@@ -12,11 +15,11 @@ A REST API that accepts financial transactions and returns real-time statistics 
 
 All endpoints are prefixed with `/api/v1`.
 
-| Method   | Endpoint        | Description                                      |
-|----------|-----------------|--------------------------------------------------|
-| `POST`   | `/transactions` | Submit a transaction                             |
-| `DELETE` | `/transactions` | Delete all transactions                          |
-| `GET`    | `/statistics`   | Get statistics for the last 60 seconds           |
+| Method   | Endpoint        | Description                                         |
+|----------|-----------------|-----------------------------------------------------|
+| `POST`   | `/transactions` | Submit a transaction                                |
+| `DELETE` | `/transactions` | Delete all transactions                             |
+| `GET`    | `/statistics`   | Get statistics for the configured lookback duration |
 
 ### POST /transactions
 
@@ -100,11 +103,98 @@ curl -i -X DELETE http://localhost:8080/api/v1/transactions
 ./mvnw test
 ```
 
+## Health Check
+
+The management server runs on port **8081**, separate from the API.
+
+```bash
+curl -s http://localhost:8081/actuator/health | jq
+```
+
+## Docker
+
+### Build
+
+```bash
+docker build -t fintech-transaction-api .
+```
+
+### Run
+
+```bash
+docker run -p 8080:8080 -p 8081:8081 fintech-transaction-api
+```
+
+Override the statistics lookback window:
+
+```bash
+docker run -p 8080:8080 -p 8081:8081 -e STATISTICS_LOOKBACK_DURATION=30s fintech-transaction-api
+```
+
+### Pull from GitHub Container Registry
+
+Pre-built images are published to GHCR on every merge to `main` that affects the image:
+
+```bash
+docker pull ghcr.io/rafaeljc/fintech-transaction-api:latest
+```
+
+Pin to a specific commit (find available SHAs on the [GHCR package page](https://github.com/rafaeljc/fintech-transaction-api/pkgs/container/fintech-transaction-api)):
+
+```bash
+docker pull ghcr.io/rafaeljc/fintech-transaction-api:<full-git-sha>
+```
+
+### Docker Compose
+
+```yaml
+services:
+  api:
+    image: fintech-transaction-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - STATISTICS_LOOKBACK_DURATION=60s
+```
+
+> The runtime image (`distroless/java21`) has no shell or HTTP client, so no in-container `HEALTHCHECK` is possible. Probe the application externally via `GET http://localhost:8081/actuator/health`.
+
+## Configuration
+
+| Env var                        | Default | Description                                                                                                               |
+|--------------------------------|---------|---------------------------------------------------------------------------------------------------------------------------|
+| `STATISTICS_LOOKBACK_DURATION` | `60s`   | How far back from now transactions are included in statistics. Must be greater than zero. Accepts `30s`, `2m`, `1h`, etc. |
+
+**Local dev** — copy `.env.example` to `.env` and adjust values:
+
+```bash
+cp .env.example .env
+```
+
+```dotenv
+STATISTICS_LOOKBACK_DURATION=30s
+```
+
+**Docker Compose:**
+
+```yaml
+services:
+  api:
+    image: fintech-transaction-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    env_file:
+      - .env
+```
+
 ## Project Structure
 
 ```
 src/
 ├── main/java/io/github/rafaeljc/fintechtransactionapi/
+│   ├── config/         # Configuration properties
 │   ├── controller/     # REST endpoints
 │   ├── service/        # Business logic
 │   ├── store/          # Thread-safe in-memory data store
@@ -118,4 +208,6 @@ src/
 ## Documentation
 
 - [`CHALLENGE.md`](CHALLENGE.md) — original challenge requirements
-- [`docs/`](./docs) — implementation plan and endpoint specification
+- [`docs/`](/docs) — implementation plans, project spec, and architecture decisions
+- [`src/main/resources/static/openapi.yaml`](src/main/resources/static/openapi.yaml) — OpenAPI 3.0 specification
+- [`http://localhost:8080/api/v1/swagger-ui`](http://localhost:8080/api/v1/swagger-ui) — interactive API docs (available while the app is running)

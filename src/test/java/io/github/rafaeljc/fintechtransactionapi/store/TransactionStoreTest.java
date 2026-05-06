@@ -1,11 +1,13 @@
 package io.github.rafaeljc.fintechtransactionapi.store;
 
+import io.github.rafaeljc.fintechtransactionapi.config.StatisticsProperties;
 import io.github.rafaeljc.fintechtransactionapi.dto.StatisticsResponse;
 import io.github.rafaeljc.fintechtransactionapi.model.Transaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +23,7 @@ class TransactionStoreTest {
 
     @BeforeEach
     void setUp() {
-        store = new TransactionStore();
+        store = new TransactionStore(new StatisticsProperties(Duration.ofSeconds(60)));
     }
 
     @Test

@@ -1,0 +1,11 @@
+.git
+.gitignore
+.idea
+target/
+*.iml
+mvnw.cmd
+.env
+docs/
+README.md
+CHALLENGE.md
+HELP.md

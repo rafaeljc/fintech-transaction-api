@@ -1,0 +1,98 @@
+openapi: "3.0.3"
+info:
+  title: Fintech Transaction API
+  version: "1.0.0"
+  description: >
+    REST API that accepts financial transactions and returns real-time statistics
+    for transactions within the configured lookback window (default: last 60 seconds).
+
+servers:
+  - url: /api/v1
+
+paths:
+  /transactions:
+    post:
+      summary: Submit a transaction
+      operationId: createTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionRequest"
+      responses:
+        "201":
+          description: Transaction accepted and stored
+        "400":
+          description: Malformed request body (invalid JSON)
+        "422":
+          description: Validation failed (negative amount, future date, missing fields)
+
+    delete:
+      summary: Delete all transactions
+      operationId: deleteTransactions
+      responses:
+        "200":
+          description: All transactions cleared
+
+  /statistics:
+    get:
+      summary: Get statistics for the current lookback window
+      operationId: getStatistics
+      responses:
+        "200":
+          description: Aggregated statistics. All values are 0 when no transactions exist in the window.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatisticsResponse"
+
+components:
+  schemas:
+    TransactionRequest:
+      type: object
+      required:
+        - amount
+        - dateTime
+      properties:
+        amount:
+          type: number
+          minimum: 0
+          description: Transaction value. Must be zero or positive.
+          example: 123.45
+        dateTime:
+          type: string
+          format: date-time
+          description: >
+            ISO 8601 date-time of when the transaction occurred.
+            Must not be in the future.
+          example: "2020-08-07T12:34:56.789-03:00"
+
+    StatisticsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 0
+          description: Number of transactions in the lookback window
+          example: 10
+        sum:
+          type: number
+          minimum: 0
+          description: Total sum of transaction amounts
+          example: 1234.56
+        avg:
+          type: number
+          minimum: 0
+          description: Average transaction amount
+          example: 123.456
+        min:
+          type: number
+          minimum: 0
+          description: Lowest transaction amount
+          example: 12.34
+        max:
+          type: number
+          minimum: 0
+          description: Highest transaction amount
+          example: 123.56

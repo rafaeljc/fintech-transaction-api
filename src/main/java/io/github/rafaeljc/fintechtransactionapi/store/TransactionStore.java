@@ -1,5 +1,6 @@
 package io.github.rafaeljc.fintechtransactionapi.store;
 
+import io.github.rafaeljc.fintechtransactionapi.config.StatisticsProperties;
 import io.github.rafaeljc.fintechtransactionapi.dto.StatisticsResponse;
 import io.github.rafaeljc.fintechtransactionapi.model.Transaction;
 import org.slf4j.Logger;
@@ -26,10 +27,15 @@ public class TransactionStore {
     //   acquiring a write lock while holding a read lock deadlocks;
     // fair mode (true) prevents writer starvation
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+    private final StatisticsProperties properties;
     private volatile TreeMap<OffsetDateTime, List<BigDecimal>> window = new TreeMap<>();
     private volatile TreeMap<BigDecimal, Integer> amounts = new TreeMap<>();
     private long count = 0;
     private BigDecimal sum = BigDecimal.ZERO;
+
+    public TransactionStore(StatisticsProperties properties) {
+        this.properties = properties;
+    }
 
     public void add(Transaction t) {
         lock.writeLock().lock();
@@ -79,7 +85,7 @@ public class TransactionStore {
     private void evict() {
         lock.writeLock().lock();
         try {
-            OffsetDateTime cutoff = OffsetDateTime.now().minusSeconds(60);
+            OffsetDateTime cutoff = OffsetDateTime.now().minus(properties.lookbackDuration());
             Map<OffsetDateTime, List<BigDecimal>> expired = window.headMap(cutoff);
             long before = count;
             for (Map.Entry<OffsetDateTime, List<BigDecimal>> entry : expired.entrySet()) {
