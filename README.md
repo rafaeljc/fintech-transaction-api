@@ -191,4 +191,6 @@ src/
 ## Documentation
 
 - [`CHALLENGE.md`](CHALLENGE.md) — original challenge requirements
-- [`docs/`](./docs) — implementation plan and endpoint specification
+- [`docs/`](/docs) — implementation plans, project spec, and architecture decisions
+- [`src/main/resources/static/openapi.yaml`](src/main/resources/static/openapi.yaml) — OpenAPI 3.0 specification
+- [`http://localhost:8080/api/v1/swagger-ui`](http://localhost:8080/api/v1/swagger-ui) — interactive API docs (available while the app is running)
